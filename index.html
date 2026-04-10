@@ -99,7 +99,7 @@ const App = () => {
   const [mainTab, setMainTab] = useState('sync'); 
   const [user, setUser] = useState(null);
 
-  // 강화된 인증 로직: 토큰 오류 시 익명 로그인으로 안전하게 전환
+  // 강화된 인증 로직
   useEffect(() => {
     const init = async () => {
       try {
@@ -131,44 +131,45 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-[100] shadow-sm text-left">
+      <header className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-[100] shadow-sm text-left">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-3 w-full md:w-auto">
-            <div className="bg-slate-900 p-2.5 rounded-2xl text-white shadow-xl">
+            <div className="bg-[#10B981] p-2 rounded-xl text-white shadow-lg">
               <Layout size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-black tracking-tight text-slate-800 leading-none">
-                전담마크 <span className="text-indigo-600 italic">V9.0 Pro</span>
-              </h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">통합 지능형 업무 협업 시스템</p>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-xl font-black tracking-tight text-slate-800">Grade-Sync</h1>
+                <span className="text-xl font-black text-[#10B981]">Smart</span>
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">실시간 동학년 업무 협업 시스템</p>
             </div>
           </div>
 
-          <nav className="flex bg-slate-100 p-1.5 rounded-2xl w-full md:w-auto shadow-inner">
+          <nav className="flex bg-slate-100 p-1.5 rounded-2xl w-full md:w-auto">
             <button 
               onClick={() => setMainTab('sync')} 
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${mainTab === 'sync' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${mainTab === 'sync' ? 'bg-white text-[#10B981] shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
             >
-              <MessageSquare size={16} /> 협업 센터 (GradeSync)
+              <MessageSquare size={16} /> 협업 센터
             </button>
             <button 
               onClick={() => setMainTab('spec')} 
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${mainTab === 'spec' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all ${mainTab === 'spec' ? 'bg-white text-[#10B981] shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
             >
-              <CalendarIcon size={16} /> 시수 관리 (Specialist)
+              <CalendarIcon size={16} /> 시수 관리
             </button>
           </nav>
 
-          <div className="hidden lg:flex items-center space-x-4 border-l pl-6 border-slate-200">
+          <div className="hidden lg:flex items-center space-x-4">
              <div className="text-right">
-                <p className="text-xs font-black text-slate-800">
+                <p className="text-xs font-black text-slate-800 uppercase">
                   {new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}
                 </p>
-                <p className="text-[10px] text-indigo-600 font-black uppercase tracking-tighter">System Engine Active</p>
+                <p className="text-[10px] text-[#10B981] font-black uppercase tracking-tighter">SEOUL STANDARD TIME</p>
              </div>
-             <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-md flex items-center justify-center font-black text-slate-400 overflow-hidden text-[10px]">
-               {user?.uid?.substring(0, 2) || 'U'}
+             <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-white shadow-sm flex items-center justify-center font-black text-slate-400 overflow-hidden text-[10px]">
+               {user?.uid?.substring(0, 2) || '0'}
              </div>
           </div>
         </div>
@@ -177,11 +178,6 @@ const App = () => {
       <main className="animate-in">
         {mainTab === 'sync' ? <GradeSyncModule user={user} /> : <SpecialistModule user={user} />}
       </main>
-
-      <div className="fixed bottom-6 left-6 flex items-center gap-3 bg-slate-900 text-white px-5 py-3 rounded-full shadow-2xl z-[110] border border-white/10 opacity-90 scale-90">
-          <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_15px_rgba(52,211,153,1)]"></div>
-          <span className="text-[10px] font-black tracking-widest uppercase italic leading-none">Matrix V9.0 Unified Engine Ready</span>
-      </div>
     </div>
   );
 };
@@ -201,7 +197,7 @@ const GradeSyncModule = ({ user }) => {
   const [showCommentModal, setShowCommentModal] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(getKstTodayStr());
 
   const classList = ['1반', '2반', '3반', '4반'];
 
@@ -221,7 +217,7 @@ const GradeSyncModule = ({ user }) => {
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
-    let deadline = newDeadlineRaw.length === 8 ? `${newDeadlineRaw.substring(0,4)}-${newDeadlineRaw.substring(4,6)}-${newDeadlineRaw.substring(6,8)}` : null;
+    let deadline = newDeadlineRaw.length === 8 ? `${newDeadlineRaw.substring(0,4)}-${newDeadlineRaw.substring(4,6)}-${newDeadlineRaw.substring(6,8)}` : getKstTodayStr();
     const checks = {}; classList.forEach(c => checks[c] = false);
     await addDoc(collection(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks'), {
       title: newTaskTitle, content: newTaskContent, deadline, checks, comments: [], createdAt: Date.now(), createdBy: user.uid
@@ -242,70 +238,88 @@ const GradeSyncModule = ({ user }) => {
     setCommentText('');
   };
 
-  const { activeTasks, completedTasks } = useMemo(() => {
-    const filtered = selectedDate ? tasks.filter(t => t.deadline === selectedDate) : tasks;
+  const { activeTasks, completedTasks, sidebarTasks } = useMemo(() => {
     const active = [], done = [];
-    filtered.forEach(t => {
+    tasks.forEach(t => {
       const isComplete = Object.values(t.checks || {}).every(v => v === true);
       if (isComplete) done.push(t); else active.push(t);
     });
-    return { activeTasks: active, completedTasks: done };
+    const sidebar = tasks.filter(t => t.deadline === selectedDate);
+    return { activeTasks: active, completedTasks: done, sidebarTasks: sidebar };
   }, [tasks, selectedDate]);
 
-  if (loading) return <div className="p-20 text-center font-black text-indigo-600">GradeSync 모듈 로딩 중...</div>;
+  if (loading) return <div className="p-20 text-center font-black text-[#10B981]">GradeSync 엔진 가동 중...</div>;
 
   const currentTaskForComment = tasks.find(t => t.id === showCommentModal);
 
   return (
-    <div className="max-w-[1600px] mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 text-left">
-      <div className="lg:col-span-8 space-y-6">
-        <section className="bg-white rounded-[32px] shadow-sm border border-slate-200 p-8">
-          <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center">
-            <Plus className="w-4 h-4 mr-2" /> 신규 업무 등록
+    <div className="max-w-[1600px] mx-auto p-4 lg:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 text-left">
+      {/* 메인 업무 리스트 영역 */}
+      <div className="lg:col-span-8 space-y-10">
+        <section className="bg-white rounded-[32px] shadow-sm border border-slate-100 p-8">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center">
+            <Plus className="w-4 h-4 mr-2" /> 신규 업무 퀵 등록
           </h3>
-          <form onSubmit={handleAddTask} className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-[3] space-y-4">
-                <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="업무 제목" className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 font-black text-lg text-slate-800 outline-none" />
-                <textarea value={newTaskContent} onChange={e => setNewTaskContent(e.target.value)} placeholder="상세 내용" rows={2} className="w-full px-5 py-3.5 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 font-bold text-sm text-slate-600 outline-none" />
-              </div>
-              <div className="flex-1 flex flex-col gap-4">
-                <input type="text" value={newDeadlineRaw} onChange={e => setNewDeadlineRaw(e.target.value.replace(/[^0-9]/g, ''))} placeholder="기한 (8자리)" maxLength={8} className="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-indigo-500 text-sm font-black text-center outline-none" />
-                <button type="submit" className="w-full bg-indigo-600 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98]">등록 <ChevronRight size={18} /></button>
-              </div>
+          <form onSubmit={handleAddTask} className="flex flex-col md:flex-row gap-4">
+            <div className="flex-[3] space-y-4">
+              <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="제목을 입력하세요..." className="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-[#10B981] font-black text-lg outline-none" />
+              <textarea value={newTaskContent} onChange={e => setNewTaskContent(e.target.value)} placeholder="상세 내용 (선택)" rows={1} className="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-[#10B981] font-bold text-sm text-slate-500 outline-none resize-none" />
+            </div>
+            <div className="flex-1 flex flex-col gap-4">
+              <input type="text" value={newDeadlineRaw} onChange={e => setNewDeadlineRaw(e.target.value.replace(/[^0-9]/g, ''))} placeholder="날짜 (예: 20260410)" maxLength={8} className="w-full px-4 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-[#10B981] text-sm font-black text-center outline-none" />
+              <button type="submit" className="w-full bg-[#10B981] text-white px-6 py-4 rounded-2xl font-black shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all">업무 등록</button>
             </div>
           </form>
         </section>
 
-        <section className="space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <h2 className="flex items-center text-sm font-black text-slate-400 uppercase tracking-widest">
-              <Circle className="w-3 h-3 mr-2 fill-green-500 text-green-500 animate-pulse" /> 진행 중 ({activeTasks.length})
-            </h2>
-            {selectedDate && <button onClick={() => setSelectedDate(null)} className="text-[11px] font-black text-blue-600 flex items-center gap-1 hover:underline"><RotateCcw size={14}/> 전체 보기</button>}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 px-2">
+            <Circle className="w-3 h-3 fill-emerald-500 text-emerald-500 animate-pulse" />
+            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">진행 중인 업무 ({activeTasks.length})</h2>
           </div>
-          {activeTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} db={syncDb} appId={syncAppId} onEdit={() => { setEditingTask(t); setEditTitle(t.title); setEditContent(t.content||''); setEditDeadlineRaw(t.deadline?.replace(/-/g,'')||''); }} onDelete={() => setDeleteConfirmId(t.id)} onComment={() => setShowCommentModal(t.id)} />)}
+          <div className="grid grid-cols-1 gap-6">
+            {activeTasks.map(t => (
+              <GradeTaskCard 
+                key={t.id} 
+                task={t} 
+                classList={classList} 
+                db={syncDb} 
+                appId={syncAppId} 
+                onEdit={() => { setEditingTask(t); setEditTitle(t.title); setEditContent(t.content||''); setEditDeadlineRaw(t.deadline?.replace(/-/g,'')||''); }} 
+                onDelete={() => setDeleteConfirmId(t.id)} 
+                onComment={() => setShowCommentModal(t.id)} 
+              />
+            ))}
+          </div>
         </section>
 
         {completedTasks.length > 0 && (
-          <section className="space-y-4 pt-6">
-            <h2 className="flex items-center text-sm font-black text-slate-400 uppercase tracking-widest">완료됨 ({completedTasks.length})</h2>
-            {completedTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} db={syncDb} appId={syncAppId} onEdit={() => {}} onDelete={() => setDeleteConfirmId(t.id)} isDone />)}
+          <section className="space-y-6 pt-10 border-t border-slate-100">
+            <div className="flex items-center gap-3 px-2">
+              <Circle className="w-2.5 h-2.5 fill-slate-300 text-slate-300" />
+              <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest">{selectedDate} 완료된 업무 ({completedTasks.length})</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-6">
+              {completedTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} db={syncDb} appId={syncAppId} onEdit={() => {}} onDelete={() => setDeleteConfirmId(t.id)} isDone />)}
+            </div>
           </section>
         )}
       </div>
 
-      <div className="lg:col-span-4 space-y-6">
-        <section className="bg-white rounded-[32px] shadow-sm border border-slate-200 overflow-hidden sticky top-32">
-          <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-            <h3 className="font-black text-slate-800 flex items-center gap-2 text-sm"><CalendarIcon size={18} className="text-indigo-600" /> {currentMonth.getFullYear()}년 {currentMonth.getMonth()+1}월</h3>
+      {/* 우측 사이드바 영역 */}
+      <div className="lg:col-span-4 space-y-8">
+        <section className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden sticky top-32">
+          <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+            <h3 className="font-black text-slate-800 flex items-center gap-2 text-base">
+              <CalendarIcon size={20} className="text-[#10B981]" /> {currentMonth.getFullYear()}년 {currentMonth.getMonth()+1}월
+            </h3>
             <div className="flex gap-1">
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1, 1))} className="p-1.5 hover:bg-slate-50 rounded-xl text-slate-400"><ChevronLeft size={18} /></button>
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 1))} className="p-1.5 hover:bg-slate-50 rounded-xl text-slate-400"><ChevronRight size={18} /></button>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth()-1, 1))} className="p-2 hover:bg-slate-50 rounded-xl transition-colors"><ChevronLeft size={20} /></button>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 1))} className="p-2 hover:bg-slate-50 rounded-xl transition-colors"><ChevronRight size={20} /></button>
             </div>
           </div>
-          <div className="grid grid-cols-7 p-4 gap-1">
-            {['일','월','화','수','목','금','토'].map(d => <div key={d} className="text-[10px] font-black text-slate-400 text-center py-2">{d}</div>)}
+          <div className="grid grid-cols-7 p-6 gap-1">
+            {['일','월','화','수','목','금','토'].map((d, i) => <div key={d} className={`text-[11px] font-black ${i===0 ? 'text-rose-400' : i===6 ? 'text-blue-400' : 'text-slate-300'} text-center py-2 uppercase`}>{d}</div>)}
             {[...Array(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay())].map((_, i) => <div key={`empty-${i}`} />)}
             {[...Array(new Date(currentMonth.getFullYear(), currentMonth.getMonth()+1, 0).getDate())].map((_, i) => {
               const d = i + 1;
@@ -315,28 +329,54 @@ const GradeSyncModule = ({ user }) => {
               return (
                 <button 
                   key={d} 
-                  onClick={() => setSelectedDate(selectedDate === ds ? null : ds)}
-                  className={`h-11 flex flex-col items-center justify-center rounded-xl relative transition-all ${selectedDate === ds ? 'bg-slate-900 text-white' : isToday ? 'bg-indigo-600 text-white' : 'hover:bg-slate-50 text-slate-600'}`}
+                  onClick={() => setSelectedDate(ds)}
+                  className={`h-12 flex flex-col items-center justify-center rounded-2xl relative transition-all ${selectedDate === ds ? 'bg-slate-900 text-white shadow-xl scale-110 z-10' : isToday ? 'bg-emerald-50 text-[#10B981]' : 'hover:bg-slate-50 text-slate-600'}`}
                 >
                   <span className="text-sm font-black">{d}</span>
-                  {hasTask && <div className={`w-1 h-1 rounded-full absolute bottom-1.5 ${selectedDate === ds ? 'bg-white' : isToday ? 'bg-white' : 'bg-indigo-500'}`} />}
+                  {hasTask && <div className={`w-1.5 h-1.5 rounded-full absolute bottom-2 ${selectedDate === ds ? 'bg-emerald-400' : 'bg-slate-300'}`} />}
                 </button>
               );
             })}
           </div>
+
+          {/* 달력 하단 업무 요약 리스트 */}
+          <div className="p-8 bg-slate-50/50 border-t border-slate-100">
+            <div className="flex items-center gap-2 mb-6 text-[#10B981]">
+              <Info size={16} />
+              <h4 className="text-[11px] font-black uppercase tracking-widest">{selectedDate} 업무 목록</h4>
+            </div>
+            <div className="space-y-3">
+              {sidebarTasks.length === 0 ? (
+                <p className="text-xs text-slate-400 font-bold py-4">해당 날짜에 등록된 업무가 없습니다.</p>
+              ) : (
+                sidebarTasks.map(t => {
+                  const isAllDone = Object.values(t.checks || {}).every(v => v === true);
+                  return (
+                    <div key={t.id} className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                      <span className="text-xs font-black text-slate-700 truncate max-w-[150px]">{t.title}</span>
+                      <div className={`w-2 h-2 rounded-full ${isAllDone ? 'bg-[#10B981]' : 'bg-slate-900'}`} />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="mt-8 flex justify-center">
+               <button className="bg-slate-900 text-white text-[10px] font-black px-6 py-3 rounded-full uppercase tracking-tighter opacity-80">Syncing Matrix Engine</button>
+            </div>
+          </div>
         </section>
       </div>
 
-      {/* 댓글 모달 (신규 구현) */}
+      {/* 댓글 모달 */}
       {showCommentModal && currentTaskForComment && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[250] flex items-center justify-center p-4 text-left">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl flex flex-col max-h-[80vh]">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-black text-slate-800">업무 의견 공유</h3>
                 <p className="text-xs font-bold text-slate-400 mt-1 truncate max-w-[300px]">{currentTaskForComment.title}</p>
               </div>
-              <button onClick={() => setShowCommentModal(null)} className="p-2 hover:bg-slate-50 rounded-full transition-colors"><X size={24} className="text-slate-400" /></button>
+              <button onClick={() => setShowCommentModal(null)} className="p-2 hover:bg-slate-50 rounded-full"><X size={24} className="text-slate-400" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-8 space-y-4">
               {(!currentTaskForComment.comments || currentTaskForComment.comments.length === 0) ? (
@@ -344,7 +384,7 @@ const GradeSyncModule = ({ user }) => {
               ) : (
                 currentTaskForComment.comments.map((c, i) => (
                   <div key={i} className={`flex flex-col ${c.userId === user.uid ? 'items-end' : 'items-start'}`}>
-                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm font-bold ${c.userId === user.uid ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-tl-none'}`}>
+                    <div className={`max-w-[85%] p-4 rounded-2xl text-sm font-bold ${c.userId === user.uid ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-slate-100 text-slate-700 rounded-tl-none'}`}>
                       {c.text}
                     </div>
                     <span className="text-[10px] text-slate-400 mt-1 font-black uppercase">{c.userId.substring(0, 6)} • {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -354,27 +394,15 @@ const GradeSyncModule = ({ user }) => {
             </div>
             <div className="p-8 border-t border-slate-50">
               <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={commentText} 
-                  onChange={e => setCommentText(e.target.value)} 
-                  onKeyPress={e => e.key === 'Enter' && handleAddComment(showCommentModal)}
-                  placeholder="의견을 입력하세요..." 
-                  className="flex-1 bg-slate-50 border-none rounded-2xl px-5 py-3.5 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button 
-                  onClick={() => handleAddComment(showCommentModal)}
-                  className="bg-indigo-600 text-white p-3.5 rounded-2xl shadow-lg shadow-indigo-100 transition-transform active:scale-90"
-                >
-                  <Send size={18} />
-                </button>
+                <input type="text" value={commentText} onChange={e => setCommentText(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddComment(showCommentModal)} placeholder="의견을 입력하세요..." className="flex-1 bg-slate-50 border-none rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500" />
+                <button onClick={() => handleAddComment(showCommentModal)} className="bg-emerald-600 text-white p-4 rounded-2xl shadow-lg transition-transform active:scale-90"><Send size={18} /></button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* 기존 모달들 유지 */}
+      {/* 수정 모달 */}
       {editingTask && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 text-left">
         <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl p-8">
           <div className="flex justify-between items-center mb-6">
@@ -387,17 +415,18 @@ const GradeSyncModule = ({ user }) => {
             await updateDoc(doc(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks', editingTask.id), { title: editTitle, content: editContent, deadline: dl });
             setEditingTask(null);
           }} className="space-y-4">
-            <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 font-black outline-none border-none focus:ring-2 focus:ring-indigo-500" placeholder="제목" />
-            <textarea value={editContent} onChange={e => setEditContent(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 font-bold outline-none border-none focus:ring-2 focus:ring-indigo-500" rows={3} placeholder="내용" />
-            <input type="text" value={editDeadlineRaw} onChange={e => setEditDeadlineRaw(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 font-black outline-none border-none focus:ring-2 focus:ring-indigo-500" placeholder="기한 (8자리)" />
+            <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 font-black outline-none border-none focus:ring-2 focus:ring-emerald-500" placeholder="제목" />
+            <textarea value={editContent} onChange={e => setEditContent(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 font-bold outline-none border-none focus:ring-2 focus:ring-emerald-500" rows={3} placeholder="내용" />
+            <input type="text" value={editDeadlineRaw} onChange={e => setEditDeadlineRaw(e.target.value)} className="w-full p-4 rounded-2xl bg-slate-50 font-black outline-none border-none focus:ring-2 focus:ring-emerald-500" placeholder="기한 (8자리)" />
             <div className="flex gap-3 pt-4">
               <button type="button" onClick={() => setEditingTask(null)} className="flex-1 p-4 font-black text-slate-400">취소</button>
-              <button type="submit" className="flex-1 p-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">저장</button>
+              <button type="submit" className="flex-1 p-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg">저장</button>
             </div>
           </form>
         </div>
       </div>}
 
+      {/* 삭제 확인 모달 */}
       {deleteConfirmId && <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[201] flex items-center justify-center p-4">
         <div className="bg-white w-full max-w-sm rounded-[32px] shadow-2xl p-8 text-center">
           <AlertTriangle className="text-red-500 mx-auto mb-4" size={48} />
@@ -419,41 +448,64 @@ const GradeTaskCard = ({ task, classList, db, appId, onEdit, onDelete, onComment
     const updated = { ...task.checks, [cls]: !task.checks[cls] };
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'gradeTasks', task.id), { checks: updated });
   };
+
+  const doneCount = Object.values(task.checks || {}).filter(v => v === true).length;
+  const isAllDone = doneCount === classList.length;
+
   return (
-    <div id={`task-${task.id}`} className={`bg-white rounded-[32px] border-2 transition-all group overflow-hidden scroll-mt-32 ${isDone ? 'opacity-60 border-slate-100' : 'border-white shadow-sm hover:shadow-xl hover:-translate-y-1'}`}>
-      <div className="p-7">
-        <div className="flex justify-between items-start mb-5">
+    <div id={`task-${task.id}`} className={`bg-white rounded-[40px] border-2 transition-all group overflow-hidden ${isDone ? 'opacity-40 border-slate-100' : 'border-white shadow-sm hover:shadow-2xl hover:-translate-y-1'}`}>
+      <div className="p-10">
+        <div className="flex justify-between items-start mb-6">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {task.deadline && <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-600 text-[10px] font-black">{task.deadline} 기한</span>}
-              <span className="text-[10px] text-slate-400 font-bold">{new Date(task.createdAt).toLocaleDateString()} 등록</span>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-100">D-Day</span>
+              <span className="text-[11px] text-slate-400 font-bold uppercase tracking-tight">{task.deadline?.replace(/-/g, '. ')}</span>
             </div>
-            <h3 className={`text-lg font-black ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}`}>{task.title}</h3>
-            {task.content && <p className="mt-2 text-sm font-bold text-slate-500 leading-relaxed line-clamp-2">{task.content}</p>}
+            <div className="flex items-center gap-3">
+              <h3 className={`text-2xl font-black ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}`}>{task.title}</h3>
+              {isAllDone && <CheckCircle2 className="text-[#10B981]" size={24} />}
+            </div>
+            {task.content && <p className="mt-3 text-sm font-bold text-slate-400 leading-relaxed line-clamp-2">{task.content}</p>}
           </div>
           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {!isDone && <button onClick={onEdit} className="p-2 hover:bg-slate-50 rounded-full text-slate-400 transition-colors"><Pencil size={16}/></button>}
-            <button onClick={onDelete} className="p-2 hover:bg-red-50 rounded-full text-red-400 transition-colors"><Trash2 size={16}/></button>
+            {!isDone && <button onClick={onEdit} className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 transition-colors"><Pencil size={18}/></button>}
+            <button onClick={onDelete} className="p-3 hover:bg-rose-50 rounded-2xl text-rose-400 transition-colors"><Trash2 size={18}/></button>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 border-t border-slate-50 pt-6">
-          {classList.map(cls => (
-            <button key={cls} onClick={() => toggle(cls)} className={`px-5 py-2.5 rounded-2xl border-2 font-black text-sm transition-all ${task.checks[cls] ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg scale-[1.05]' : 'bg-white border-slate-100 text-slate-400 hover:border-indigo-200'}`}>
-              {cls} {task.checks[cls] && <CheckCircle2 size={14} className="inline ml-1" />}
-            </button>
-          ))}
-          {!isDone && onComment && (
-            <button onClick={onComment} className="ml-auto flex items-center gap-2 text-slate-400 font-black text-xs hover:text-indigo-600 transition-colors bg-slate-50 px-4 py-2.5 rounded-2xl">
-              <MessageSquare size={16} /> {task.comments?.length || 0}
-            </button>
-          )}
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-t border-slate-50 pt-8 mt-4">
+          <div className="flex flex-wrap gap-3">
+            {classList.map(cls => (
+              <button 
+                key={cls} 
+                onClick={() => toggle(cls)} 
+                className={`px-6 py-3.5 rounded-[22px] border-2 font-black text-sm flex items-center gap-2 transition-all ${task.checks[cls] ? 'bg-[#10B981] border-[#10B981] text-white shadow-lg shadow-emerald-100' : 'bg-white border-slate-100 text-slate-300 hover:border-emerald-200'}`}
+              >
+                {cls} {task.checks[cls] && <CheckCircle2 size={16} />}
+              </button>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">Status: {doneCount}/{classList.length} Done</span>
+              <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[#10B981] transition-all duration-500" style={{ width: `${(doneCount/classList.length)*100}%` }} />
+              </div>
+            </div>
+            {!isDone && onComment && (
+              <button onClick={onComment} className="flex items-center gap-2 text-slate-300 font-black text-xs hover:text-[#10B981] transition-colors p-2">
+                <MessageSquare size={18} /> {task.comments?.length || 0}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// --- 5. Specialist Module (시수 관리 - 기존 로직 100% 보존) ---
+// --- 5. Specialist Module (시수 관리) ---
 const SpecialistModule = ({ user }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [baseSchedule, setBaseSchedule] = useState({});
@@ -559,7 +611,7 @@ const SpecialistModule = ({ user }) => {
     <div className="p-4 lg:p-6 space-y-6 text-left">
       <nav className="flex justify-center bg-white p-1.5 rounded-3xl shadow-sm border border-slate-100 max-w-fit mx-auto mb-4">
         {[{ id: 'academic', label: '수업 현황/달력' }, { id: 'instructor', label: '강사 수업 관리' }, { id: 'stats', label: '시수 통계' }].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-6 py-2 rounded-2xl text-[11px] font-black transition-all ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:text-indigo-600'}`}>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-6 py-2 rounded-2xl text-[11px] font-black transition-all ${activeTab === tab.id ? 'bg-[#10B981] text-white shadow-lg' : 'text-slate-500 hover:text-[#10B981]'}`}>
             {tab.label}
           </button>
         ))}
@@ -567,7 +619,7 @@ const SpecialistModule = ({ user }) => {
 
       {activeTab === 'academic' && (
         <div className="space-y-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[3rem] shadow-sm border border-slate-200">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-[3rem] shadow-sm border border-slate-100">
             <div className="flex items-center gap-2">
               <button onClick={() => { let d = new Date(selectedDate + 'T00:00:00'); d.setDate(d.getDate()-1); setSelectedDate(d.toLocaleDateString('en-CA')); }} className="p-2 border rounded-xl hover:bg-slate-50 transition-colors"><ChevronLeft size={20}/></button>
               <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="px-4 py-2 bg-slate-50 rounded-xl font-black text-slate-700 outline-none border-none text-sm" />
@@ -577,7 +629,7 @@ const SpecialistModule = ({ user }) => {
             <div className="px-5 py-2 rounded-xl text-[11px] font-black bg-slate-100 text-slate-400">Daily Matrix Active</div>
           </div>
 
-          <div className="bg-white rounded-[3rem] border border-slate-200 shadow-sm overflow-hidden overflow-x-auto">
+          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
             <table className="w-full border-collapse min-w-[800px]">
               <thead><tr className="bg-slate-50 border-b">
                 <th className="p-5 border-r w-24 text-xs font-black text-slate-400 uppercase italic text-center">교시</th>
@@ -586,7 +638,7 @@ const SpecialistModule = ({ user }) => {
               <tbody>
                 {PERIODS.map(p => (
                   <tr key={p} className="border-b last:border-0">
-                    <td className="p-5 bg-slate-50 border-r text-center font-black text-slate-200 text-4xl italic">{p}</td>
+                    <td className="p-5 bg-slate-50 border-r text-center font-black text-slate-200 text-4xl italic leading-none">{p}</td>
                     {dynamicClasses.map(cls => {
                       const cell = getCellData(selectedDate, p, cls);
                       const spec = SPECIALISTS.find(s => s.id === (cell.override?.type || cell.base?.type));
@@ -634,13 +686,13 @@ const SpecialistModule = ({ user }) => {
               }} className="w-full py-5 bg-white text-amber-600 font-black rounded-3xl shadow-xl hover:bg-slate-50 active:scale-[0.98] transition-all">스케줄 일괄 반영</button>
             </div>
           </div>
-          <div className="bg-white p-8 rounded-[4rem] border border-slate-200 shadow-sm overflow-hidden h-[500px] flex flex-col">
+          <div className="bg-white p-8 rounded-[4rem] border border-slate-100 shadow-sm overflow-hidden h-[500px] flex flex-col">
             <h4 className="font-black text-slate-800 mb-4 uppercase italic text-sm">최근 등록 내역</h4>
             <div className="flex-1 overflow-y-auto pr-2 space-y-2">
               {Object.entries(overrides).filter(([k,v]) => v.type === 'external').slice(-20).map(([k,v]) => (
                 <div key={k} className="p-3 bg-slate-50 rounded-2xl flex justify-between items-center border border-slate-100 hover:bg-slate-100 transition-colors">
                   <div className="text-left"><p className="text-xs font-black text-slate-800">{v.title} ({v.classLabel})</p><p className="text-[9px] font-bold text-slate-400">{k}</p></div>
-                  <button onClick={() => deleteData('overrides', k)} className="text-red-400 p-2 hover:bg-white rounded-xl"><Trash2 size={14}/></button>
+                  <button onClick={() => deleteData('overrides', k)} className="text-red-400 p-2 hover:bg-white rounded-xl transition-colors"><Trash2 size={14}/></button>
                 </div>
               ))}
             </div>
@@ -651,11 +703,11 @@ const SpecialistModule = ({ user }) => {
       {activeTab === 'stats' && (
         <div className="space-y-10 animate-in">
           {dynamicClasses.map(cls => (
-            <div key={cls} className="bg-white p-10 rounded-[4rem] border border-slate-200 shadow-sm">
+            <div key={cls} className="bg-white p-10 rounded-[4rem] border border-slate-100 shadow-sm">
               <h3 className="text-2xl font-black text-slate-800 italic mb-8 uppercase">Class {cls} Statistics</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {['s1', 's2'].map(sem => (
-                  <div key={sem} className="bg-slate-50/50 p-8 rounded-[3rem] space-y-6 border border-slate-100">
+                  <div key={sem} className="bg-slate-50/50 p-8 rounded-[3rem] space-y-6 border border-slate-100 shadow-sm">
                     <h4 className="font-black text-indigo-600 italic uppercase text-xs">{sem.toUpperCase()} Semester Hours</h4>
                     <div className="space-y-4">
                       {SPECIALISTS.filter(s => s.id !== 'external').map(spec => {
@@ -679,16 +731,16 @@ const SpecialistModule = ({ user }) => {
       )}
 
       {isSidebarOpen && selectedCell && (
-        <div className="fixed top-0 right-0 z-[300] w-full max-w-md h-screen bg-white shadow-2xl animate-in text-left flex flex-col border-l border-slate-200">
+        <div className="fixed top-0 right-0 z-[300] w-full max-w-md h-screen bg-white shadow-2xl animate-in text-left flex flex-col border-l border-slate-100">
           <div className="p-8 border-b bg-slate-50 flex justify-between items-center">
             <h3 className="text-xl font-black text-slate-800 italic uppercase">Specialist Editor</h3>
             <button onClick={() => setIsSidebarOpen(false)}><X size={24} className="text-slate-400"/></button>
           </div>
           <div className="p-8 flex-1 overflow-y-auto space-y-8">
             <div className="space-y-4">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase pl-2 border-l-2 border-indigo-600">Quick Registration</h4>
+               <h4 className="text-[10px] font-black text-slate-400 uppercase pl-2 border-l-2 border-[#10B981]">Quick Registration</h4>
                <div className="flex gap-2">
-                 <button onClick={() => setNewRegMode('master')} className={`flex-1 py-3.5 rounded-2xl text-[11px] font-black transition-all ${newRegMode === 'master' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:text-slate-600'}`}>전담 마스터</button>
+                 <button onClick={() => setNewRegMode('master')} className={`flex-1 py-3.5 rounded-2xl text-[11px] font-black transition-all ${newRegMode === 'master' ? 'bg-[#10B981] text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:text-slate-600'}`}>전담 마스터</button>
                  <button onClick={() => setNewRegMode('custom')} className={`flex-1 py-3.5 rounded-2xl text-[11px] font-black transition-all ${newRegMode === 'custom' ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:text-slate-600'}`}>수동 마크</button>
                </div>
                {newRegMode === 'master' ? (
@@ -704,7 +756,7 @@ const SpecialistModule = ({ user }) => {
                  const type = newRegMode === 'master' ? newRegType : 'external';
                  await saveData('overrides', selectedCell, { title: newRegTitle, type, status: 'held', classLabel: cls });
                  setIsSidebarOpen(false); setNewRegTitle('');
-               }} className="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black shadow-xl hover:bg-indigo-700 active:scale-[0.98] transition-all">상태 반영하기</button>
+               }} className="w-full py-5 bg-[#10B981] text-white rounded-[2rem] font-black shadow-xl hover:bg-emerald-600 active:scale-[0.98] transition-all">상태 반영하기</button>
             </div>
             <div className="pt-8 border-t border-slate-100">
               <button onClick={async () => { await deleteData('overrides', selectedCell); setIsSidebarOpen(false); }} className="w-full py-4 text-red-500 font-black text-[10px] uppercase tracking-widest border border-red-100 rounded-2xl hover:bg-red-50 transition-colors">기록 초기화 (마스터 복구)</button>
