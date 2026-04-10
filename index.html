@@ -12,30 +12,37 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK (Modular v11) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js"
+      }
+    }
+    </script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; -webkit-font-smoothing: antialiased; background-color: #F8FAFC; color: #1e293b; }
+        body { font-family: 'Pretendard', sans-serif; -webkit-font-smoothing: antialiased; background-color: #F8FAFC; color: #1e293b; overflow-x: hidden; }
         .animate-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 커스텀 스크롤바 */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-
-        .emerald-gradient { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="module" babel>
+        import { initializeApp, getApps, getApp } from "firebase/app";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
+        import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, arrayUnion, Timestamp } from "firebase/firestore";
+
         // --- 1. Firebase 설정 ---
         const syncFirebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSy...", 
@@ -57,20 +64,17 @@
         const specAppId = 'jdmk-v5-final';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Firebase 초기화
-        const syncApp = !firebase.apps.length ? firebase.initializeApp(syncFirebaseConfig) : firebase.app();
-        const specApp = !firebase.apps.find(a => a.name === "specialist") 
-            ? firebase.initializeApp(specialistFirebaseConfig, "specialist") 
-            : firebase.app("specialist");
+        const syncApp = initializeApp(syncFirebaseConfig, "[DEFAULT]");
+        const specApp = initializeApp(specialistFirebaseConfig, "specialist");
 
-        const syncDb = syncApp.firestore();
-        const syncAuth = syncApp.auth();
-        const specDb = specApp.firestore();
-        const specAuth = specApp.auth();
+        const syncDb = getFirestore(syncApp);
+        const syncAuth = getAuth(syncApp);
+        const specDb = getFirestore(specApp);
+        const specAuth = getAuth(specApp);
 
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- 공통 컴포넌트: 아이콘 로더 ---
+        // --- 공통 컴포넌트: 아이콘 ---
         const LucideIcon = ({ name, size = 20, className = "" }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
             return <i data-lucide={name} style={{ width: size, height: size }} className={`inline-block ${className}`}></i>;
@@ -89,7 +93,7 @@
             '2026-01-01': '신정', '2026-03-01': '삼일절', '2026-05-05': '어린이날', '2026-06-06': '현충일', '2026-08-15': '광복절', '2026-10-03': '개천절', '2026-10-09': '한글날', '2026-12-25': '성탄절'
         };
 
-        // --- 메인 App 컴포넌트 ---
+        // --- 메인 App ---
         function App() {
             const [mainTab, setMainTab] = useState('sync');
             const [user, setUser] = useState(null);
@@ -98,22 +102,22 @@
                 const init = async () => {
                     try {
                         if (initialAuthToken) {
-                            try { await syncAuth.signInWithCustomToken(initialAuthToken); }
-                            catch (e) { await syncAuth.signInAnonymously(); }
+                            try { await signInWithCustomToken(syncAuth, initialAuthToken); }
+                            catch (e) { await signInAnonymously(syncAuth); }
                         } else {
-                            await syncAuth.signInAnonymously();
+                            await signInAnonymously(syncAuth);
                         }
-                        await specAuth.signInAnonymously();
+                        await signInAnonymously(specAuth);
                     } catch (e) { console.error("Auth Error", e); }
                 };
                 init();
-                const unsub = syncAuth.onAuthStateChanged(setUser);
+                const unsub = onAuthStateChanged(syncAuth, setUser);
                 return () => unsub();
             }, []);
 
             return (
                 <div className="min-h-screen flex flex-col">
-                    <header className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-[100] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+                    <header className="glass-effect bg-white/90 border-b border-slate-100 px-6 py-4 sticky top-0 z-[100] shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-md">
                         <div className="flex items-center space-x-3 w-full md:w-auto">
                             <div className="bg-[#10B981] p-2 rounded-xl text-white shadow-lg">
                                 <LucideIcon name="layout" size={24} />
@@ -123,11 +127,11 @@
                                     <h1 className="text-xl font-black text-slate-800 tracking-tight">Grade-Sync</h1>
                                     <span className="text-xl font-black text-[#10B981]">Smart</span>
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Unified Collaboration Hub</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 leading-none">Unified Collaboration Hub</p>
                             </div>
                         </div>
 
-                        <nav className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto">
+                        <nav className="flex bg-slate-100 p-1 rounded-2xl w-full md:w-auto shadow-inner">
                             <button 
                                 onClick={() => setMainTab('sync')} 
                                 className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${mainTab === 'sync' ? 'bg-white text-[#10B981] shadow-md' : 'text-slate-500 hover:text-slate-800'}`}
@@ -145,10 +149,10 @@
                         <div className="hidden lg:flex items-center space-x-4 border-l pl-6 border-slate-100">
                              <div className="text-right">
                                 <p className="text-xs font-black text-slate-800 uppercase">{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</p>
-                                <p className="text-[10px] text-[#10B981] font-black uppercase tracking-tighter">System Engine Active</p>
+                                <p className="text-[10px] text-[#10B981] font-black uppercase tracking-tighter">Matrix Engine Active</p>
                              </div>
-                             <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 text-[10px] shadow-inner">
-                                {user?.uid?.substring(0, 2).toUpperCase() || 'U'}
+                             <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 text-[10px] shadow-inner uppercase">
+                                {user?.uid?.substring(0, 2) || 'U'}
                              </div>
                         </div>
                     </header>
@@ -160,7 +164,7 @@
             );
         }
 
-        // --- 4. GradeSync Module (협업 센터) ---
+        // --- 4. GradeSync Module ---
         function GradeSyncModule({ user }) {
             const [tasks, setTasks] = useState([]);
             const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -175,30 +179,34 @@
 
             useEffect(() => {
                 if (!user) return;
-                const path = syncDb.collection('artifacts').doc(syncAppId).collection('public').doc('data').collection('gradeTasks');
-                const unsub = path.onSnapshot(snap => {
+                const taskCol = collection(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks');
+                const unsub = onSnapshot(taskCol, snap => {
                     setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => b.createdAt - a.createdAt));
-                });
+                }, err => console.error("Firestore Error", err));
                 return () => unsub();
             }, [user]);
 
             const addTask = async (e) => {
                 e.preventDefault();
-                if (!newTaskTitle.trim()) return;
-                let deadline = newDeadlineRaw.length === 8 ? `${newDeadlineRaw.substring(0,4)}-${newDeadlineRaw.substring(4,6)}-${newDeadlineRaw.substring(6,8)}` : getKstTodayStr();
-                const checks = {}; classList.forEach(c => checks[c] = false);
-                await syncDb.collection('artifacts').doc(syncAppId).collection('public').doc('data').collection('gradeTasks').add({
-                    title: newTaskTitle, content: newTaskContent, deadline, checks, comments: [], createdAt: Date.now(), createdBy: user.uid
-                });
-                setNewTaskTitle(''); setNewTaskContent(''); setNewDeadlineRaw('');
+                if (!newTaskTitle.trim() || !user) return;
+                try {
+                    let deadline = newDeadlineRaw.length === 8 ? `${newDeadlineRaw.substring(0,4)}-${newDeadlineRaw.substring(4,6)}-${newDeadlineRaw.substring(6,8)}` : getKstTodayStr();
+                    const checks = {}; classList.forEach(c => checks[c] = false);
+                    await addDoc(collection(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks'), {
+                        title: newTaskTitle, content: newTaskContent, deadline, checks, comments: [], createdAt: Date.now(), createdBy: user.uid
+                    });
+                    setNewTaskTitle(''); setNewTaskContent(''); setNewDeadlineRaw('');
+                } catch (err) {
+                    console.error("Add Task Error", err);
+                    alert("업무 등록에 실패했습니다. (인증 세션 확인 필요)");
+                }
             };
 
             const addComment = async (taskId) => {
-                if (!commentText.trim()) return;
-                const taskRef = syncDb.collection('artifacts').doc(syncAppId).collection('public').doc('data').collection('gradeTasks').doc(taskId);
-                const task = tasks.find(t => t.id === taskId);
-                await taskRef.update({
-                    comments: [...(task.comments || []), { text: commentText, userId: user.uid, createdAt: Date.now() }]
+                if (!commentText.trim() || !user) return;
+                const taskRef = doc(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks', taskId);
+                await updateDoc(taskRef, {
+                    comments: arrayUnion({ text: commentText, userId: user.uid, createdAt: Date.now() })
                 });
                 setCommentText('');
             };
@@ -211,14 +219,13 @@
             return (
                 <div className="max-w-[1600px] mx-auto p-4 lg:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10">
                     <div className="lg:col-span-8 space-y-10">
-                        {/* 신규 업무 등록 */}
                         <section className="bg-white rounded-[40px] shadow-sm border border-slate-100 p-10 text-left">
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center">
                                 <LucideIcon name="plus" size={14} className="mr-2" /> 신규 업무 등록
                             </h3>
                             <form onSubmit={addTask} className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-[3] space-y-4">
-                                    <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="제목을 입력하세요..." className="w-full px-7 py-5 rounded-[24px] bg-slate-50 border-none font-black text-lg outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                    <input type="text" value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} placeholder="업무 제목을 입력하세요..." className="w-full px-7 py-5 rounded-[24px] bg-slate-50 border-none font-black text-lg outline-none focus:ring-2 focus:ring-[#10B981]" />
                                     <textarea value={newTaskContent} onChange={e => setNewTaskContent(e.target.value)} placeholder="상세 내용을 입력하세요 (선택)" rows="1" className="w-full px-7 py-3 rounded-[24px] bg-slate-50 border-none font-bold text-sm text-slate-500 outline-none resize-none"></textarea>
                                 </div>
                                 <div className="flex-1 flex flex-col gap-4">
@@ -228,29 +235,26 @@
                             </form>
                         </section>
 
-                        {/* 진행 중인 업무 */}
                         <div className="space-y-6 text-left">
                             <div className="flex items-center gap-2 px-2">
                                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                                 <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">진행 중인 업무 ({activeTasks.length})</h2>
                             </div>
                             <div className="grid grid-cols-1 gap-6">
-                                {activeTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} onComment={() => setShowCommentModal(t.id)} />)}
+                                {activeTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} syncDb={syncDb} syncAppId={syncAppId} onComment={() => setShowCommentModal(t.id)} />)}
                             </div>
                         </div>
 
-                        {/* 완료된 업무 */}
                         {completedTasks.length > 0 && (
                             <div className="space-y-6 pt-10 border-t border-slate-100 text-left">
                                 <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">최근 완료됨 ({completedTasks.length})</h2>
                                 <div className="grid grid-cols-1 gap-6">
-                                    {completedTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} isDone />)}
+                                    {completedTasks.map(t => <GradeTaskCard key={t.id} task={t} classList={classList} isDone syncDb={syncDb} syncAppId={syncAppId} />)}
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    {/* 우측 사이드바 */}
                     <div className="lg:col-span-4 space-y-8">
                         <section className="bg-white rounded-[40px] shadow-sm border border-slate-100 overflow-hidden sticky top-32">
                             <div className="p-8 border-b border-slate-50 flex items-center justify-between">
@@ -272,11 +276,7 @@
                                     const isToday = ds === getKstTodayStr();
                                     const hasTask = tasks.some(t => t.deadline === ds);
                                     return (
-                                        <button 
-                                            key={d} 
-                                            onClick={() => setSelectedDate(ds)}
-                                            className={`h-12 flex flex-col items-center justify-center rounded-2xl relative transition-all ${selectedDate === ds ? 'bg-slate-900 text-white shadow-xl scale-110' : isToday ? 'bg-emerald-50 text-[#10B981]' : 'hover:bg-slate-50 text-slate-600'}`}
-                                        >
+                                        <button key={d} onClick={() => setSelectedDate(ds)} className={`h-12 flex flex-col items-center justify-center rounded-2xl relative transition-all ${selectedDate === ds ? 'bg-slate-900 text-white shadow-xl scale-110' : isToday ? 'bg-emerald-50 text-[#10B981]' : 'hover:bg-slate-50 text-slate-600'}`}>
                                             <span className="text-sm font-black">{d}</span>
                                             {hasTask && <div className={`w-1.5 h-1.5 rounded-full absolute bottom-2 ${selectedDate === ds ? 'bg-emerald-400' : 'bg-slate-300'}`} />}
                                         </button>
@@ -290,21 +290,17 @@
                                 </h4>
                                 <div className="space-y-3">
                                     {sidebarTasks.length === 0 ? <p className="text-xs text-slate-400 font-bold py-6 text-center italic">등록된 업무가 없습니다.</p> :
-                                    sidebarTasks.map(t => {
-                                        const isAllDone = Object.values(t.checks||{}).every(v=>v);
-                                        return (
-                                            <div key={t.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-emerald-200 transition-colors">
-                                                <span className="text-xs font-black truncate max-w-[180px] text-slate-700">{t.title}</span>
-                                                <div className={`w-2.5 h-2.5 rounded-full ${isAllDone ? 'bg-[#10B981]' : 'bg-slate-200'}`} />
-                                            </div>
-                                        );
-                                    })}
+                                    sidebarTasks.map(t => (
+                                        <div key={t.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-emerald-200 transition-colors">
+                                            <span className="text-xs font-black truncate max-w-[180px] text-slate-700">{t.title}</span>
+                                            <div className={`w-2.5 h-2.5 rounded-full ${Object.values(t.checks||{}).every(v=>v) ? 'bg-[#10B981]' : 'bg-slate-200'}`} />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </section>
                     </div>
 
-                    {/* 댓글 모달 */}
                     {showCommentModal && currentTaskForComment && (
                         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
                             <div className="bg-white w-full max-w-lg rounded-[48px] shadow-2xl flex flex-col max-h-[85vh] overflow-hidden text-left">
@@ -341,11 +337,11 @@
             );
         }
 
-        // --- Task Card Component ---
-        function GradeTaskCard({ task, classList, onComment, isDone }) {
+        function GradeTaskCard({ task, classList, onComment, isDone, syncDb, syncAppId }) {
             const toggle = async (cls) => {
                 const updated = { ...task.checks, [cls]: !task.checks[cls] };
-                await syncDb.collection('artifacts').doc(syncAppId).collection('public').doc('data').collection('gradeTasks').doc(task.id).update({ checks: updated });
+                const taskRef = doc(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks', task.id);
+                await updateDoc(taskRef, { checks: updated });
             };
             const doneCount = Object.values(task.checks || {}).filter(v => v === true).length;
             const progress = (doneCount / classList.length) * 100;
@@ -357,31 +353,26 @@
                             <div>
                                 <div className="flex items-center gap-3 mb-5">
                                     <span className="px-4 py-1.5 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest shadow-xl shadow-emerald-100">D-Day</span>
-                                    <span className="text-xs text-slate-400 font-black uppercase tracking-tighter">{task.deadline.replace(/-/g, '. ')}</span>
+                                    <span className="text-xs text-slate-400 font-black uppercase tracking-tighter">{task.deadline?.replace(/-/g, '. ')}</span>
                                 </div>
                                 <h3 className={`text-2xl font-black tracking-tight ${isDone ? 'line-through text-slate-300' : 'text-slate-800'}`}>{task.title}</h3>
                                 {task.content && <p className="mt-3 text-sm font-bold text-slate-400 leading-relaxed line-clamp-2">{task.content}</p>}
                             </div>
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => syncDb.collection('artifacts').doc(syncAppId).collection('public').doc('data').collection('gradeTasks').doc(task.id).delete()} className="text-rose-400 p-4 hover:bg-rose-50 rounded-full transition-colors"><LucideIcon name="trash-2" size={20}/></button>
+                                <button onClick={() => deleteDoc(doc(syncDb, 'artifacts', syncAppId, 'public', 'data', 'gradeTasks', task.id))} className="text-rose-400 p-4 hover:bg-rose-50 rounded-full transition-colors"><LucideIcon name="trash-2" size={20}/></button>
                             </div>
                         </div>
-                        
                         <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-slate-50 pt-10">
                             <div className="flex flex-wrap gap-3">
                                 {classList.map(cls => (
-                                    <button 
-                                        key={cls} 
-                                        onClick={() => toggle(cls)} 
-                                        className={`px-7 py-4 rounded-[26px] border-2 font-black text-sm flex items-center gap-2 transition-all ${task.checks[cls] ? 'bg-[#10B981] border-[#10B981] text-white shadow-2xl shadow-emerald-100 scale-105' : 'bg-white border-slate-100 text-slate-300 hover:border-emerald-200'}`}
-                                    >
+                                    <button key={cls} onClick={() => toggle(cls)} className={`px-7 py-4 rounded-[26px] border-2 font-black text-sm flex items-center gap-2 transition-all ${task.checks[cls] ? 'bg-[#10B981] border-[#10B981] text-white shadow-2xl shadow-emerald-100 scale-105' : 'bg-white border-slate-100 text-slate-300 hover:border-emerald-200'}`}>
                                         {cls} {task.checks[cls] && <LucideIcon name="check-circle-2" size={16}/>}
                                     </button>
                                 ))}
                             </div>
                             <div className="flex items-center gap-10">
                                 <div className="flex flex-col items-end">
-                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 italic">Sync Status: {doneCount}/{classList.length}</span>
+                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3 italic leading-none">Status: {doneCount}/{classList.length}</span>
                                     <div className="w-40 h-2 bg-slate-50 rounded-full overflow-hidden shadow-inner">
                                         <div className="h-full bg-[#10B981] transition-all duration-700 ease-out" style={{width: `${progress}%`}}></div>
                                     </div>
@@ -398,7 +389,7 @@
             );
         }
 
-        // --- 5. Specialist Module (시수 관리) ---
+        // --- 5. Specialist Module ---
         function SpecialistModule({ user }) {
             const [isLoading, setIsLoading] = useState(true);
             const [baseSchedule, setBaseSchedule] = useState({});
@@ -417,38 +408,30 @@
             useEffect(() => {
                 if (!user) return;
                 
-                let loadedCount = 0;
-                const totalCollections = 3;
-                const markLoaded = () => {
-                    loadedCount++;
-                    if (loadedCount >= totalCollections) setIsLoading(false);
-                };
-
-                const path = (c) => specDb.collection('artifacts').doc(specAppId).collection('public').doc('data').collection(c);
+                const timer = setTimeout(() => setIsLoading(false), 5000);
+                const path = (c) => collection(specDb, 'artifacts', specAppId, 'public', 'data', c);
                 
                 const unsubs = [
-                    path('base').onSnapshot(s => { 
+                    onSnapshot(path('base'), s => { 
                         const d = {}; s.docs.forEach(doc => d[doc.id] = doc.data()); 
-                        setBaseSchedule(d); markLoaded(); 
-                    }, err => { console.error(err); markLoaded(); }),
-                    path('overrides').onSnapshot(s => { 
+                        setBaseSchedule(d); 
+                        setIsLoading(false);
+                    }, err => { console.error(err); setIsLoading(false); }),
+                    onSnapshot(path('overrides'), s => { 
                         const d = {}; s.docs.forEach(doc => d[doc.id] = doc.data()); 
-                        setOverrides(d); markLoaded(); 
-                    }, err => { console.error(err); markLoaded(); }),
-                    path('academic').onSnapshot(s => {
+                        setOverrides(d); 
+                    }),
+                    onSnapshot(path('academic'), s => {
                         const d = {};
                         s.docs.forEach(doc => {
                             if (doc.id === 'targets') setTargetHours(doc.data());
                             else if (doc.id === 'semesters') setSemesterConfig(doc.data());
                             else d[doc.id] = doc.data();
                         });
-                        setAcademicEvents(d); markLoaded();
-                    }, err => { console.error(err); markLoaded(); })
+                        setAcademicEvents(d);
+                    })
                 ];
                 
-                // 데이터 엔진 지연 시 강제 해제 (최대 4초)
-                const timer = setTimeout(() => setIsLoading(false), 4000);
-
                 return () => {
                     unsubs.forEach(u => u());
                     clearTimeout(timer);
@@ -456,7 +439,9 @@
             }, [user]);
 
             const saveData = async (coll, id, data) => {
-                await specDb.collection('artifacts').doc(specAppId).collection('public').doc('data').collection(coll).doc(id).set({ ...data, updatedAt: Date.now() });
+                if (!user) return;
+                const docRef = doc(specDb, 'artifacts', specAppId, 'public', 'data', coll, id);
+                await setDoc(docRef, { ...data, updatedAt: Date.now() });
             };
 
             const getCellData = (dateStr, period, classLabel) => {
@@ -534,7 +519,7 @@
                             <div className="bg-white rounded-[40px] border border-slate-50 shadow-sm overflow-hidden overflow-x-auto">
                                 <table className="w-full border-collapse min-w-[800px]">
                                     <thead><tr className="bg-slate-50 border-b">
-                                        <th className="p-6 border-r w-24 text-xs font-black text-slate-300 uppercase italic text-center">교시</th>
+                                        <th className="p-6 border-r w-24 text-xs font-black text-slate-300 uppercase italic text-center leading-none">교시</th>
                                         {dynamicClasses.map(cls => <th key={cls} className="p-6 border-r font-black text-slate-700 text-sm italic text-center uppercase tracking-widest">{cls}</th>)}
                                     </tr></thead>
                                     <tbody>
@@ -548,10 +533,10 @@
                                                         <td key={cls} className="p-3 border-r last:border-0 align-middle min-h-[120px] bg-white relative">
                                                             {(cell.override || cell.base) ? (
                                                                 <div className={`h-full min-h-[90px] flex flex-col justify-center items-center p-5 rounded-[32px] border shadow-sm transition-all hover:scale-[0.97] ${spec?.bg} ${spec?.text} ${spec?.border}`}>
-                                                                    <span className="text-[9px] font-black opacity-30 uppercase tracking-widest mb-1.5">{cell.override ? 'Override' : 'Master'}</span>
+                                                                    <span className="text-[9px] font-black opacity-30 uppercase tracking-widest mb-1.5 leading-none">{cell.override ? 'Override' : 'Master'}</span>
                                                                     <span className="text-sm font-black italic text-center leading-tight">{cell.override?.title || spec?.name}</span>
                                                                 </div>
-                                                            ) : <div className="w-full h-full opacity-0 hover:opacity-10 transition-opacity bg-slate-200 rounded-3xl"></div>}
+                                                            ) : <div className="w-full h-full opacity-0 hover:opacity-10 transition-opacity bg-slate-200 rounded-3xl min-h-[90px]"></div>}
                                                         </td>
                                                     );
                                                 })}
@@ -568,17 +553,33 @@
                             <div className="lg:col-span-2 bg-amber-600 p-12 rounded-[56px] text-white shadow-2xl">
                                 <h3 className="text-3xl font-black mb-8 flex items-center gap-4 italic uppercase tracking-tighter"><LucideIcon name="layers" size={36}/> 강사 수업 일괄 등록</h3>
                                 <div className="space-y-8">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <input type="text" value={instTitle} onChange={e => setInstTitle(e.target.value)} placeholder="수업명(예: 수영)" className="w-full p-5 rounded-3xl bg-white/10 border-none text-white font-black outline-none placeholder:text-white/40" />
-                                        <input type="text" value={instClass} onChange={e => setInstClass(e.target.value)} placeholder="학급(예: 5-1)" className="w-full p-5 rounded-3xl bg-white/10 border-none text-white font-black outline-none placeholder:text-white/40" />
-                                        <select value={instStart} onChange={e => setInstStart(parseInt(e.target.value))} className="w-full p-5 rounded-3xl bg-white/20 border-none font-black text-sm outline-none">{[1,2,3,4,5,6].map(p => <option key={p} value={p} className="text-slate-800">{p}교시 시작</option>)}</select>
-                                        <select value={instEnd} onChange={e => setInstEnd(parseInt(e.target.value))} className="w-full p-5 rounded-3xl bg-white/20 border-none font-black text-sm outline-none">{[1,2,3,4,5,6].map(p => <option key={p} value={p} className="text-slate-800">{p}교시 종료</option>)}</select>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase opacity-60 ml-2">수업명</label>
+                                            <input type="text" value={instTitle} onChange={e => setInstTitle(e.target.value)} placeholder="예: 수영" className="w-full p-5 rounded-3xl bg-white/10 border-none text-white font-black outline-none placeholder:text-white/40" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase opacity-60 ml-2">학급</label>
+                                            <input type="text" value={instClass} onChange={e => setInstClass(e.target.value)} placeholder="예: 5-1" className="w-full p-5 rounded-3xl bg-white/10 border-none text-white font-black outline-none placeholder:text-white/40" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase opacity-60 ml-2">시작</label>
+                                            <select value={instStart} onChange={e => setInstStart(parseInt(e.target.value))} className="w-full p-5 rounded-3xl bg-white/20 border-none font-black text-sm outline-none">{[1,2,3,4,5,6].map(p => <option key={p} value={p} className="text-slate-800">{p}교시</option>)}</select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase opacity-60 ml-2">종료</label>
+                                            <select value={instEnd} onChange={e => setInstEnd(parseInt(e.target.value))} className="w-full p-5 rounded-3xl bg-white/20 border-none font-black text-sm outline-none">{[1,2,3,4,5,6].map(p => <option key={p} value={p} className="text-slate-800">{p}교시</option>)}</select>
+                                        </div>
                                     </div>
-                                    <textarea value={instDates} onChange={e => setInstDates(e.target.value)} placeholder="날짜 입력 (예: 4/15, 4/16...)" className="w-full p-8 rounded-[40px] bg-white/10 border-none text-white font-black min-h-[160px] outline-none placeholder:text-white/40" />
+                                    <div className="space-y-2 text-left">
+                                        <label className="text-[10px] font-black uppercase opacity-60 ml-2">날짜 입력 (쉼표 또는 줄바꿈으로 구분)</label>
+                                        <textarea value={instDates} onChange={e => setInstDates(e.target.value)} placeholder="예: 4/15, 4/16, 4/17..." className="w-full p-8 rounded-[40px] bg-white/10 border-none text-white font-black min-h-[160px] outline-none placeholder:text-white/40" />
+                                    </div>
                                     <button onClick={async () => {
                                         const parts = instDates.split(/[,|\n\s]+/).map(d => d.trim().replace(/\//g, '.')).filter(d => d);
                                         for(let dStr of parts) {
                                             const [m, day] = dStr.split('.');
+                                            if (!m || !day) continue;
                                             const finalD = `2026-${m.padStart(2,'0')}-${day.padStart(2,'0')}`;
                                             for(let i=instStart; i<=instEnd; i++) await saveData('overrides', `${finalD}-${i}-${instClass}`, { title: instTitle, type: 'external', classLabel: instClass });
                                         }
@@ -588,12 +589,12 @@
                                 </div>
                             </div>
                             <div className="bg-white p-10 rounded-[56px] border border-slate-100 shadow-sm flex flex-col h-[600px]">
-                                <h4 className="font-black text-slate-800 mb-6 uppercase italic text-sm border-l-4 border-amber-500 pl-4">Recently Added Overrides</h4>
+                                <h4 className="font-black text-slate-800 mb-6 uppercase italic text-sm border-l-4 border-amber-500 pl-4 leading-none">Recently Added Overrides</h4>
                                 <div className="flex-1 overflow-y-auto pr-2 space-y-3">
                                     {Object.entries(overrides).filter(([k,v]) => v.type === 'external').slice(-20).map(([k,v]) => (
                                         <div key={k} className="p-5 bg-slate-50 rounded-3xl flex justify-between items-center border border-slate-100">
-                                            <div className="text-left"><p className="text-xs font-black text-slate-800">{v.title} ({v.classLabel})</p><p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">{k}</p></div>
-                                            <button onClick={async () => await specDb.collection('artifacts').doc(specAppId).collection('public').doc('data').collection('overrides').doc(k).delete()} className="text-rose-400 p-2 hover:bg-white rounded-xl transition-colors"><LucideIcon name="trash-2" size={16}/></button>
+                                            <div className="text-left"><p className="text-xs font-black text-slate-800 leading-none">{v.title} ({v.classLabel})</p><p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-tighter leading-none">{k}</p></div>
+                                            <button onClick={async () => await deleteDoc(doc(specDb, 'artifacts', specAppId, 'public', 'data', 'overrides', k))} className="text-rose-400 p-2 hover:bg-white rounded-xl transition-colors"><LucideIcon name="trash-2" size={16}/></button>
                                         </div>
                                     ))}
                                 </div>
@@ -605,11 +606,11 @@
                         <div className="space-y-12 animate-in">
                             {dynamicClasses.map(cls => (
                                 <div key={cls} className="bg-white p-12 rounded-[56px] border border-slate-100 shadow-sm overflow-hidden group">
-                                    <h3 className="text-3xl font-black text-slate-800 italic mb-10 uppercase border-b border-slate-50 pb-6 tracking-tighter">Class {cls} Statistics</h3>
+                                    <h3 className="text-3xl font-black text-slate-800 italic mb-10 uppercase border-b border-slate-50 pb-6 tracking-tighter leading-none">Class {cls} Statistics</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
                                         {['s1', 's2'].map(sem => (
                                             <div key={sem} className="bg-slate-50/50 p-10 rounded-[44px] space-y-8 border border-slate-100 shadow-inner">
-                                                <h4 className="font-black text-[#10B981] italic uppercase text-xs tracking-widest">{sem === 's1' ? 'First' : 'Second'} Semester Progress</h4>
+                                                <h4 className="font-black text-[#10B981] italic uppercase text-xs tracking-widest leading-none">{sem === 's1' ? 'First' : 'Second'} Semester Progress</h4>
                                                 <div className="space-y-6">
                                                     {SPECIALISTS.filter(s => s.id !== 'external').map(spec => {
                                                         const count = stats[cls][sem][spec.id];
@@ -617,7 +618,7 @@
                                                         const per = Math.min((count/target)*100, 100);
                                                         return (
                                                             <div key={spec.id} className="space-y-3">
-                                                                <div className="flex justify-between text-[11px] font-black"><span className="text-slate-400 uppercase">{spec.name}</span><span className="text-slate-900">{count} / {target}</span></div>
+                                                                <div className="flex justify-between text-[11px] font-black leading-none"><span className="text-slate-400 uppercase">{spec.name}</span><span className="text-slate-900">{count} / {target}</span></div>
                                                                 <div className="h-3 bg-white rounded-full overflow-hidden border border-slate-100 shadow-inner">
                                                                     <div className={`h-full ${spec.color} transition-all duration-[1.5s] shadow-lg`} style={{ width: `${per}%` }} />
                                                                 </div>
